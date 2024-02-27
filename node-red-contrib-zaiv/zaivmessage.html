@@ -1,0 +1,203 @@
+<script type="text/html" data-template-name="zaiv message">
+    <div id="module-method-details" class="form-row">
+        <label for="node-input-module-method"><i class="fa fa-server"></i> Module/method</label>
+        <input type="text" id="node-input-module-method" style="width: 70%" />
+    </div>
+
+    <div id="command-attribute-details" class="form-row">
+        <label for="node-input-command-attribute"><i class="fa fa-server"></i> Command/Attribute</label>
+        <input type="text" id="node-input-command-attribute" style="width: 70%" />
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Display Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+
+<script type="text/javascript">
+    (function () {
+
+        function zaivmessage_oneditprepare() {
+            var node = this;
+            $("#node-input-module-method").typedInput({
+                default: this.variableType || 'zaiv',
+                types: [
+                    {
+                        value: "zaiv",
+                        label: "zaiv.",
+                        options: ["post", "get"]
+                    },
+                    {
+                        value: "video",
+                        label: "video.",
+                        options: ["post", "get"]
+                    }
+                ]
+            });
+
+            if (this.module == "zaiv") {
+                if (this.method == "post") {
+                    $("#node-input-command-attribute").typedInput({
+                        default: this.variableType || 'config',
+                        types: [
+                            {
+                                value: "config",
+                                label: "config.",
+                                options: ["class", "confidence", "hef", "interface"]
+                            },
+                            {
+                                value: "start",
+                                label: "start.",
+                                options: ["inference"]
+                            },
+                            {
+                                value: "stop",
+                                label: "stop.",
+                                options: ["inference"]
+                            },
+                            {
+                                value: "subscribe",
+                                label: "subscribe.",
+                                options: ["infer-metadata"]
+                            },
+                            {
+                                value: "unsubscribe",
+                                label: "unsubscribe.",
+                                options: ["inference"]
+                            }
+                        ]
+                    }).trigger("change");
+                }
+                else if (this.method == "get") {
+                    $("#node-input-command-attribute").typedInput({
+                        default: this.variableType || 'config',
+                        types: [
+                            {
+                                value: "config",
+                                label: "config.",
+                                options: ["class", "confidence", "hef", "interface"]
+                            },
+                            {
+                                value: "status",
+                                label: "status.",
+                                options: ["inference", "infer-metadata"]
+                            }
+                        ]
+                    }).trigger("change");
+                }
+            }
+            else if (this.module == "video") {
+                if (this.method == "post") {
+                    $("#node-input-command-attribute").typedInput({
+                        default: this.variableType || 'config',
+                        types: [
+                            {
+                                value: "config",
+                                label: "config.",
+                                options: ["streaming", "cam-options"]
+                            }
+                        ]
+                    }).trigger("change");
+                }
+                else if (this.method == "get") {
+                    $("#node-input-command-attribute").typedInput({
+                        default: this.variableType || 'config',
+                        types: [
+                            {
+                                value: "config",
+                                label: "config.",
+                                options: ["streaming", "cam-options"]
+                            }
+                        ]
+                    }).trigger("change");
+                }
+            }
+        }
+
+        function zaivmessage_oneditsave() {
+
+            this.module = $("#node-input-module-method").typedInput('type');
+            this.method = $("#node-input-module-method").typedInput('value');
+            this.command = $("#node-input-command-attribute").typedInput('type');
+            this.attribute = $("#node-input-command-attribute").typedInput('value');
+        }
+
+
+
+        RED.nodes.registerType('zaiv message', {
+            color: "#038FC7",
+            category: 'zaiv',
+            defaults: {
+                module: { value: "zaiv" },
+                method: { value: "post", required: true },
+                command: { value: "config", required: true },
+                attribute: { value: "class", required: true }
+            },
+            inputs: 1,
+            outputs: 1,
+            icon: "white-sign-in.png",
+            label: function () {
+                if (this.name) {
+                    return this.name;
+                }
+                return "[zaiv message] " + this.module + "." + this.method + "." + this.command + "." + this.attribute;
+            },
+            labelStyle: function () {
+                return this.name ? "node_label_italic" : "";
+            },
+            oneditprepare: zaivmessage_oneditprepare,
+            oneditsave: zaivmessage_oneditsave
+        });
+    })();
+</script>
+
+<script type="text/html" data-help-name="zaiv message">
+    <p>Builds a command to be sent to the zaiv application.</p>
+
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>
+            payload
+            <span class="property-type">number | string</span>
+        </dt>
+        <dd> A number or string representing the value in case of a Write command. </dd>
+    </dl>
+
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <dl class="message-properties">
+            <dt>
+                payload
+                <span class="property-type">object</span>
+            </dt>
+            <dd> Command to be sent to the zaiv application </dd>
+            <dt>
+                StatusCode
+                <span class="property-type">number</span>
+            </dt>
+            <dd> Error code if the command cannot be built. </dd>
+        </dl>
+    </ol>
+
+    <h3>Details</h3>
+    <p>
+        The input msg is used as a trigger to send output.
+    </p>
+    <ul>
+        <li>
+            <code>Module</code> is the type of target module to be generated.
+        </li>
+        <li>
+            <code>Method</code> to get or port to.
+        </li>
+        <li>
+            <code>Command</code> is the type of action
+        </li>
+        <li>
+            <code>Attribute</code> is the attribute of action
+        </li>
+    </ul>
+
+</script>

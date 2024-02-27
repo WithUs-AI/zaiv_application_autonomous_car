@@ -1,0 +1,207 @@
+<script type="text/html" data-template-name="zaiv parser metadata">
+    <div class="form-row node-input-sub-container-row">
+        <ol id="node-input-sub-container"></ol>
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+
+<script type="text/javascript">
+    (function () {
+
+        function zaiv_parser_metadata_oneditprepare() {
+            var node = this;
+            node.varlist = [];      //Variable list
+
+            var timerGetVarList;   //timer used to get the satus when retrieving variable list
+
+            this.outputs = this.subs.length + 1;
+
+            function resizeSub(sub) {
+                var newWidth = sub.width();
+                var valueField = sub.find(".node-input-sub-value");
+                valueField.typedInput("width", (newWidth - 60 - 70));
+            }
+
+
+            $("#node-input-sub-container").css('min-height', '80px').css('min-width', '450px').editableList({
+                addItem: function (container, i, opt) {
+                    if (!opt.hasOwnProperty('r')) {
+                        opt.r = ""; //Empty value at creation
+                    }
+                    var sub = opt.r;
+
+                    if (!opt.hasOwnProperty('i')) {
+                        opt._i = Math.floor((0x99999 - 0x10000) * Math.random()).toString();
+                    }
+                    container.css({
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap'
+                    });
+                    var row = $('<div/>').appendTo(container);
+
+                    function createValueField() {
+                        return $('<input/>', { class: "node-input-sub-value", type: "text", style: "margin-left: 5px;" }).appendTo(row).autocomplete({
+                            source: node.varlist,
+                            minLength: 0,
+                            close: function (event, ui) {
+                                //$("#node-config-input-serialport").autocomplete("destroy");
+                            }
+                        }).autocomplete("search", "");
+                    }
+
+                    var valueField = null;
+
+                    var finalspan = $('<span/>', { style: "float: right;margin-top: 6px;" }).appendTo(row);
+                    finalspan.append(' &#8594; <span class="node-input-sub-index">' + (i + 1) + '</span> ');
+
+
+                    if (!valueField) {
+                        valueField = createValueField();
+                    }
+
+                    valueField.val(sub);
+
+                    resizeSub(container);
+                },
+                removeItem: function (opt) {
+                },
+                resizeItem: resizeSub,
+                sortItems: function (subs) {
+                },
+                sortable: false,
+                removable: true
+            });
+
+            var varName;
+            for (var i = 0; i < this.subs.length; i++) {
+                varName = this.subs[i];
+                $("#node-input-sub-container").editableList('addItem', { r: varName, i: i });
+            }
+
+            $("#node-input-sub-container").editableList('height', 40);
+
+
+            //click on the button to get the variable list
+            $("#node-input-lookup-variables").click(function () {
+                $('#node-input-lookup-variables-icon').removeClass("fa fa-search"); //Hide the search icon
+                $('#node-input-lookup-variables-icon').addClass("fa fa-spinner fa-spin"); //Show the spinner icon. the fa-spin after makes the icon spin
+                $("#node-input-lookup-variables").addClass('disabled');
+
+            });
+        }
+
+        function zaiv_parser_metadata_oneditsave() {
+            var subs = $("#node-input-sub-container").editableList('items');
+            var node = this;
+            node.subs = [];
+
+            subs.each(function (i) {
+                var ruleData = $(this).data('data');
+                var sub = $(this);
+                var value = sub.find(".node-input-sub-value").val();
+                if (value !== "") {
+                    node.subs.push(value);
+
+                }
+            });
+
+            this.outputs = node.subs.length + 1;
+        }
+
+
+        function zaiv_parser_metadata_oneditcancel() {
+            var subs = $("#node-input-sub-container").editableList('items');
+            var node = this;
+            node.subs = [];
+
+            subs.each(function (i) {
+                var ruleData = $(this).data('data');
+                var sub = $(this);
+                var value = sub.find(".node-input-sub-value").val();
+                if (value !== "") {
+                    node.subs.push(value);
+                }
+            });
+
+            this.outputs = node.subs.length + 1;
+        }
+
+
+        function zaiv_parser_metadata_oneditresize(size) {
+            var rows = $("#dialog-form>div:not(.node-input-sub-container-row)");
+            var height = size.height;
+            for (var i = 0; i < rows.length; i++) {
+                height -= $(rows[i]).outerHeight(true);
+            }
+            var editorRow = $("#dialog-form>div.node-input-sub-container-row");
+            height -= (parseInt(editorRow.css("marginTop")) + parseInt(editorRow.css("marginBottom")));
+            height += 16;
+            $("#node-input-sub-container").editableList('height', height);
+        }
+
+        RED.nodes.registerType('zaiv parser metadata', {
+            color: "#038FC7",
+            category: 'zaiv',
+            defaults: {
+                name: { value: "" },
+                subs: { value: "" },
+                outputs: { value: 1 }
+            },
+            inputs: 1,
+            outputs: 1,
+            icon: "white-sign-in.png",
+            label: function () {
+                if (this.name) {
+                    return this.name;
+                }
+                return "zaiv parser - metadata";
+            },
+            labelStyle: function () {
+                return this.name ? "node_label_italic" : "";
+            },
+            oneditprepare: zaiv_parser_metadata_oneditprepare,
+            oneditsave: zaiv_parser_metadata_oneditsave,
+            oneditresize: zaiv_parser_metadata_oneditresize,
+            oneditcancel: zaiv_parser_metadata_oneditcancel
+        });
+    })();
+</script>
+
+<script type="text/html" data-help-name="zaiv parser metadata">
+    <p>Builds a command to be sent to the zaiv application.</p>
+
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>
+            payload
+            <span class="property-type">number | string</span>
+        </dt>
+        <dd> A number or string representing the value in case of a Write command. </dd>
+    </dl>
+
+    <h3>Outputs</h3>
+    <ol class="node-ports">
+        <dl class="message-properties">
+            <dt>
+                payload
+                <span class="property-type">object</span>
+            </dt>
+            <dd> Command to be sent to the zaiv application </dd>
+            <dt>
+                StatusCode
+                <span class="property-type">number</span>
+            </dt>
+            <dd> Error code if the command cannot be built. </dd>
+        </dl>
+    </ol>
+
+    <h3>Details</h3>
+    <p>
+        The input msg is used as a trigger to send output.
+    </p>
+
+</script>
